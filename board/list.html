@@ -1,0 +1,165 @@
+<!DOCTYPE HTML>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="keywords" content="" >
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="format-detection" content="telephone=no">
+    <title>2016 굿모닝 경기 소통 크리에이터 공모전</title>
+    <link rel="stylesheet" type="text/css" href="../css/general.css" >
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script type="text/javascript" src="../js/jquery.scrollTo-min.js"></script>
+    <script src="../js/layout.js"></script>
+    <!--[if IE]>
+    <script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+</head>
+<body>
+<div id="wrap">
+     <!-- @ CONTAINER -->
+    <section id="container" class="sub  new">
+        <!-- @ CONTENTS -->
+        <div id="contents">
+            <!-- @ SUB TITLE AREA -->
+            <div class="sub-title-area">
+                <h2 class="tit">News & Info </h2>
+            </div>
+			<div class="btn_area">
+					<a href="write.html" class="btn_blue_line">글쓰기</a>
+              </div>
+			<!-- 페이징 처리는 5개씩 해주세요-->
+            <table class="news_list">
+            <caption>News 리스트</caption>
+            <colgroup>
+                <col style="width: 10%">
+                <col style="width:*">
+                <col style="width: 10%">
+                <col style="width: 10%">
+                <col style="width: 5%">
+                <col style="width: 8%">
+            </colgroup>
+            <thead>
+                <tr>
+                    <th scope="col">번호</th>
+                    <th scope="col">제목</th>
+                    <th scope="col">작성자</th>
+                    <th scope="col">등록일</th>
+                    <th scope="col">조회</th>
+                    <th scope="col">첨부</th>
+                </tr>
+            </thead>
+
+            <tbody></tbody>
+            </table>
+            <div class="pagination" id="pagination"></div>
+            <div class="find_wrap">
+                <select name="" id="">
+                    <option value="">제목</option>
+                    <option value="">내용</option>
+                </select>
+                <input type="text" name="" id=""  title="검색어 입력" placeholder="검색어 입력">
+                <a href="#" class="btn_gray">검색</a>
+            </div>
+        </div>
+        <!-- CONTENTS @ -->
+    </section>
+    <!-- CONTAINER @ -->
+</div>
+    <script>
+        let currentPage = 0;
+        let totalPages = 0;
+
+        function loadBoard(page) {
+            fetch(`http://localhost:8080/board?page=${page}&size=5`)
+                .then(res => res.json())
+                .then(data => {
+
+                    currentPage = data.number;
+                    totalPages = data.totalPages;
+
+                    renderTable(data.content);
+                    renderPagination();
+                });
+        }
+
+        function renderTable(list) {
+            let tbody = document.querySelector("tbody");
+            tbody.innerHTML = "";
+
+            list.forEach(board => {
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${board.id}</td>
+                        <td class="board_txt">
+                            <p>
+                                <a href="view.html?id=${board.id}" class="ellip">
+                                    ${board.title}
+                                </a>
+                            </p>
+                        </td>
+                        <td class="board_man">${board.writer}</td>
+                        <td class="board_date">${board.createdAt}</td>
+                        <td class="board_read">${board.viewCount}</td>
+                        <td class="board_file"></td>
+                    </tr>
+                `;
+            });
+        }
+
+        function renderPagination() {
+            let pagination = document.getElementById("pagination");
+            pagination.innerHTML = "";
+
+            const pageSize = 5;
+            const groupIndex = Math.floor(currentPage / pageSize);
+
+            const startPage = groupIndex * pageSize;
+            let endPage = startPage + pageSize - 1;
+
+            if (endPage >= totalPages) {
+                endPage = totalPages - 1;
+            }
+
+            pagination.innerHTML += `
+                <a class="prev end" onclick="loadBoard(0)">첫 페이지</a>
+            `;
+
+            if (startPage > 0) {
+                pagination.innerHTML += `
+                    <a class="prev" onclick="loadBoard(${startPage - 1})">이전</a>
+                `;
+            } else {
+                pagination.innerHTML += `
+                    <a class="prev disabled">이전</a>
+                `;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                pagination.innerHTML += `
+                    <a class="${i === currentPage ? 'on' : ''}"
+                    onclick="loadBoard(${i})">
+                        ${i + 1}
+                    </a>
+                `;
+            }
+
+            if (endPage < totalPages - 1) {
+                pagination.innerHTML += `
+                    <a class="next" onclick="loadBoard(${endPage + 1})">다음</a>
+                `;
+            } else {
+                pagination.innerHTML += `
+                    <a class="next disabled">다음</a>
+                `;
+            }
+
+            pagination.innerHTML += `
+                <a class="next end" onclick="loadBoard(${totalPages - 1})">마지막 페이지</a>
+            `;
+        }
+
+        loadBoard(0);
+    </script>
+</body>
+</html>
